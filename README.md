@@ -254,4 +254,4 @@ Para executar os testes automatizados:
 docker compose exec api python -m pytest
 ```
 
-**Observação:** para utilizar os recursos de Inteligência Artificial, também
+**Observação:** para utilizar os recursos de Inteligência Artificial, também é necessário instalar e executar o Ollama na máquina hospedeira e baixar os modelos llama3.2:3b e nomic-embed-text.
