@@ -21,9 +21,15 @@ services:
     container_name: hotel-api
     ports:
       - "8000:8000"
+    volumes:
+      - ./documentos:/app/documentos:ro
+      - chroma_data:/app/chroma_data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   postgres_data:
+  chroma_data:
