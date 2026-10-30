@@ -1,6 +1,6 @@
 # Hotel API
 
-API de Hotelaria desenvolvida em Python com FastAPI como projeto de estudo, evoluindo de uma API REST tradicional para uma aplicação com recursos de Inteligência Artificial.
+API de hotelaria desenvolvida em Python com FastAPI como projeto de estudo. O projeto evoluiu de uma API REST tradicional para uma aplicação com recursos de Inteligência Artificial, integração com banco de dados e recuperação de informações por documentos.
 
 ## Tecnologias utilizadas
 
@@ -34,6 +34,7 @@ API de Hotelaria desenvolvida em Python com FastAPI como projeto de estudo, evol
 - Buscar quarto por ID
 - Atualizar quarto
 - Excluir quarto
+- Controle de disponibilidade dos quartos
 
 ### Reservas
 
@@ -42,7 +43,6 @@ API de Hotelaria desenvolvida em Python com FastAPI como projeto de estudo, evol
 - Buscar reserva por ID
 - Atualizar reserva
 - Excluir reserva
-- Controle de disponibilidade dos quartos
 
 ### Autenticação
 
@@ -57,26 +57,26 @@ A API possui integração com modelos de linguagem locais através do Ollama.
 - **Summarize:** geração de resumos de textos.
 - **Classify:** classificação de mensagens.
 - **Analyze:** análise de textos e identificação de informações relevantes.
-- **RAG (Retrieval-Augmented Generation):** respostas geradas com base em documentos do hotel.
-- **Tool Calling:** consultas ao banco de dados para obter informações sobre hotéis, reservas e disponibilidade de quartos.
+- **RAG (Retrieval-Augmented Generation):** geração de respostas com base em documentos do hotel.
+- **Consultas ao banco de dados:** utilização de funções específicas para consultar hotéis, reservas e disponibilidade de quartos.
 
-### RAG e banco vetorial
+## RAG e banco de dados vetorial
 
 A funcionalidade RAG utiliza o documento `documentos/hotel.txt` como fonte de informações sobre as regras e os serviços do hotel.
 
-O processamento segue as etapas:
+O processamento segue as seguintes etapas:
 
 1. Leitura do documento.
 2. Divisão do conteúdo em chunks.
 3. Geração de embeddings utilizando o modelo Nomic Embed Text.
 4. Armazenamento dos vetores no ChromaDB.
-5. Busca por trechos relevantes.
+5. Busca por trechos relevantes de acordo com a pergunta.
 6. Envio do contexto recuperado ao modelo Llama 3.2.
-7. Geração da resposta baseada no documento.
+7. Geração de uma resposta baseada nas informações encontradas.
 
 O ChromaDB utiliza armazenamento persistente para manter os documentos indexados.
 
-### Tool Calling
+## Consultas ao banco de dados (Tool Calling)
 
 A API também permite consultar informações diretamente no PostgreSQL por meio de funções específicas:
 
@@ -84,13 +84,13 @@ A API também permite consultar informações diretamente no PostgreSQL por meio
 - `consultar_reserva()`: consulta as reservas cadastradas.
 - `consultar_disponibilidade()`: consulta os quartos disponíveis.
 
-O endpoint de perguntas identifica quando a solicitação exige informações do banco de dados e retorna os resultados correspondentes.
+O endpoint `/ai/ask` identifica o tipo de pergunta e direciona a consulta para a função correspondente ou para o mecanismo RAG, quando a informação está nos documentos.
 
 ## Documentação
 
 A API possui documentação automática através do Swagger.
 
-Com a API em execução, acesse:
+Com a aplicação em execução, acesse:
 
 [http://localhost:8000/docs](http://localhost:8000/docs)
 
@@ -98,7 +98,7 @@ Com a API em execução, acesse:
 
 O projeto utiliza PostgreSQL como banco de dados relacional.
 
-O PostgreSQL é executado através do Docker Compose, com armazenamento persistente.
+O PostgreSQL é executado através do Docker Compose e possui armazenamento persistente por meio de volume Docker.
 
 ## Docker
 
@@ -106,8 +106,10 @@ O projeto utiliza os seguintes serviços e recursos:
 
 - `api` — aplicação FastAPI.
 - `postgres` — banco de dados PostgreSQL.
-- `chroma_data` — volume persistente para o banco vetorial ChromaDB.
 - `postgres_data` — volume persistente para os dados do PostgreSQL.
+- `chroma_data` — volume persistente para o banco vetorial ChromaDB.
+
+### Comandos Docker
 
 Para iniciar ou reconstruir os containers:
 
@@ -133,20 +135,34 @@ Para parar os containers:
 docker compose down
 ```
 
+> **Importante:** o comando `docker compose down` preserva os volumes. Não utilize `docker compose down -v` se quiser manter os dados armazenados.
+
 ## Configuração da Inteligência Artificial
 
 O projeto utiliza o Ollama instalado na máquina hospedeira, permitindo executar modelos de linguagem localmente.
 
-Instale o Ollama e baixe os modelos utilizados:
+### 1. Instalar o Ollama
+
+Instale o Ollama através do site oficial:
+
+[https://ollama.com/download](https://ollama.com/download)
+
+### 2. Baixar os modelos utilizados
+
+Com o Ollama instalado e em execução, abra o terminal e execute:
 
 ```bash
 ollama pull llama3.2:3b
+```
+
+```bash
 ollama pull nomic-embed-text
 ```
 
-O modelo `llama3.2:3b` é utilizado para geração de respostas, resumos, classificações e análises.
+### 3. Modelos utilizados
 
-O modelo `nomic-embed-text` é utilizado para gerar embeddings dos documentos e das perguntas.
+- **llama3.2:3b:** utilizado para geração de respostas, resumos, classificações e análises.
+- **nomic-embed-text:** utilizado para gerar embeddings dos documentos e das perguntas.
 
 A aplicação executada no Docker acessa o Ollama através do endereço:
 
@@ -154,61 +170,59 @@ A aplicação executada no Docker acessa o Ollama através do endereço:
 http://host.docker.internal:11434
 ```
 
-É necessário manter o Ollama em execução na máquina hospedeira para utilizar os recursos de IA.
+É necessário manter o Ollama em execução na máquina hospedeira para utilizar os recursos de Inteligência Artificial.
 
 ## Endpoints principais
 
 ### Autenticação
 
-```http
-POST /auth/register
-POST /auth/login
-```
+| Método | Endpoint |
+|---|---|
+| POST | `/auth/register` |
+| POST | `/auth/login` |
 
 ### Hotéis
 
-```http
-POST   /hoteis/
-GET    /hoteis/
-GET    /hoteis/{hotel_id}
-PUT    /hoteis/{hotel_id}
-DELETE /hoteis/{hotel_id}
-```
+| Método | Endpoint |
+|---|---|
+| POST | `/hoteis/` |
+| GET | `/hoteis/` |
+| GET | `/hoteis/{hotel_id}` |
+| PUT | `/hoteis/{hotel_id}` |
+| DELETE | `/hoteis/{hotel_id}` |
 
 ### Quartos
 
-```http
-POST   /quartos/
-GET    /quartos/
-GET    /quartos/{quarto_id}
-PUT    /quartos/{quarto_id}
-DELETE /quartos/{quarto_id}
-```
+| Método | Endpoint |
+|---|---|
+| POST | `/quartos/` |
+| GET | `/quartos/` |
+| GET | `/quartos/{quarto_id}` |
+| PUT | `/quartos/{quarto_id}` |
+| DELETE | `/quartos/{quarto_id}` |
 
 ### Reservas
 
-```http
-POST   /reservas/
-GET    /reservas/
-GET    /reservas/{reserva_id}
-PUT    /reservas/{reserva_id}
-DELETE /reservas/{reserva_id}
-```
+| Método | Endpoint |
+|---|---|
+| POST | `/reservas/` |
+| GET | `/reservas/` |
+| GET | `/reservas/{reserva_id}` |
+| PUT | `/reservas/{reserva_id}` |
+| DELETE | `/reservas/{reserva_id}` |
 
 ### Inteligência Artificial
 
-```http
-POST /ai/summarize
-POST /ai/classify
-POST /ai/analyze
-POST /ai/ask
-```
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/ai/summarize` | Resumo de textos |
+| POST | `/ai/classify` | Classificação de mensagens |
+| POST | `/ai/analyze` | Análise de textos |
+| POST | `/ai/ask` | Perguntas sobre documentos e dados do sistema |
 
 Os endpoints de processamento de texto recebem um campo `text`.
 
-O endpoint `/ai/ask` recebe uma pergunta no mesmo formato e pode consultar documentos ou informações do banco de dados.
-
-Exemplo:
+Exemplo de requisição para `/ai/ask`:
 
 ```json
 {
@@ -218,40 +232,56 @@ Exemplo:
 
 ## Como executar o projeto
 
-Clone o repositório:
+### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/CauaLionel/hotel-api-local-entrega-semana2.git
 ```
 
-Entre na pasta do projeto:
+### 2. Entrar na pasta do projeto
 
 ```bash
 cd hotel-api-local-entrega-semana2
 ```
 
-Inicie os containers:
+### 3. Iniciar os containers
 
 ```bash
 docker compose up -d --build
 ```
 
-Verifique se os serviços estão funcionando:
+### 4. Verificar os serviços
 
 ```bash
 docker compose ps
 ```
 
-Acesse a documentação da API:
+### 5. Acessar a documentação
 
-```text
-http://localhost:8000/docs
-```
+Com a API em execução, acesse:
 
-Para executar os testes automatizados:
+[http://localhost:8000/docs](http://localhost:8000/docs)
+
+### 6. Executar os testes automatizados
 
 ```bash
 docker compose exec api python -m pytest
 ```
 
-**Observação:** para utilizar os recursos de Inteligência Artificial, também é necessário instalar e executar o Ollama na máquina hospedeira e baixar os modelos llama3.2:3b e nomic-embed-text.
+**Observação:** para utilizar os recursos de Inteligência Artificial, também é necessário instalar e executar o Ollama na máquina hospedeira e baixar os modelos `llama3.2:3b` e `nomic-embed-text`.
+
+## Testes
+
+Além dos testes automatizados com Pytest, foram realizados testes funcionais dos recursos de Inteligência Artificial através do Swagger:
+
+- Geração de resumos.
+- Classificação de mensagens.
+- Análise de textos.
+- Recuperação de informações através do RAG.
+- Consultas ao banco de dados através das funções de Tool Calling.
+
+## Objetivo
+
+Este projeto foi desenvolvido com o objetivo de praticar conceitos de desenvolvimento Backend, criação de APIs REST, integração com bancos de dados relacionais, autenticação, testes automatizados, Docker e Inteligência Artificial.
+
+O desenvolvimento também explora conceitos de RAG, embeddings, bancos de dados vetoriais e integração de modelos de linguagem com sistemas existentes.
